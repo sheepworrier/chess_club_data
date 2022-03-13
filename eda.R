@@ -60,7 +60,7 @@ get_player_daily_stats <- function(username) {
   player_stats_json <- read_json(paste0("https://api.chess.com/pub/player/",
                                         username,
                                         "/stats"))
-  if(!is.na(player_stats_json$chess_daily)) {
+  if("chess_daily" %in% names(player_stats_json)) {
     as_tibble(player_stats_json$chess_daily$last) %>%
       bind_cols(as_tibble(player_stats_json$chess_daily$record)) %>%
       mutate(username = !!username)
@@ -71,3 +71,17 @@ tic()
 club_member_daily_stats <- map_dfr(club_members_df$username,
                                    get_player_daily_stats)
 toc()
+# Get details of club matches
+club_matches_json <- read_json(paste0("https://api.chess.com/pub/club/",
+                                      club_name_in_url,
+                                      "/matches"))
+club_matches_df <- tibble(matches = pluck(club_matches_json, "finished")) %>%
+  unnest_wider(matches) %>%
+  bind_rows(tibble(matches = pluck(club_matches_json, "in_progress")) %>%
+              unnest_wider(matches)) %>%
+  bind_rows(tibble(matches = pluck(club_matches_json, "registered")) %>%
+              unnest_wider(matches)) %>%
+  mutate(start_time = as_datetime(start_time))
+
+match_details_json <- read_json(club_matches_df$`@id`[1])
+# as_tibble(match_details_json)
