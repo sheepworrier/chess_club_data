@@ -8,6 +8,7 @@ library(purrr)
 library(furrr)
 library(dplyr)
 library(tictoc)
+library(googlesheets4)
 # Connect to SharePoint
 sites_list <- list_sharepoint_sites()
 sp_site <- get_sharepoint_site(site_id = sites_list[[1]]$properties$id)
@@ -85,3 +86,9 @@ club_matches_df <- tibble(matches = pluck(club_matches_json, "finished")) %>%
 
 match_details_json <- read_json(club_matches_df$`@id`[1])
 # as_tibble(match_details_json)
+
+# Test writing something to Google sheets
+gs4_auth(email = "deanjohnperry@gmail.com")
+ss <- gs4_find("1-day-per-move-club-data")
+sheet_write(club_member_profiles_df, ss = ss, sheet = "players")
+sheet_write(club_matches_df, ss = ss, sheet = "matches")
